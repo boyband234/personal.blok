@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game & Payment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .page {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #666;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"] {
+      width: calc(100% - 22px);
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin: 5px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #result {
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    #score {
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .question {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Halaman Login -->
+<div id="login" class="page">
+  <h2>Login</h2>
+  <form id="login-form" onsubmit="login(event)">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required><br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required><br>
+    <button type="submit">Login</button>
+  </form>
+</div>
+
+<!-- Halaman Permainan Kuis -->
+<div id="game" class="page" style="display: none;">
+  <h2>Permainan Kuis</h2>
+  <div id="question" class="question"></div>
+  <div id="options">
+    <button onclick="checkAnswer('A')">A</button>
+    <button onclick="checkAnswer('B')">B</button>
+    <button onclick="checkAnswer('C')">C</button>
+    <button onclick="checkAnswer('D')">D</button>
+  </div>
+  <p id="result"></p>
+  <p>Skor: <span id="score">0</span></p>
+</div>
+
+<!-- Halaman Pembayaran -->
+<div id="payment" class="page" style="display: none;">
+  <h2>Detail Pembayaran</h2>
+  <label for="danaNumber">Nomor Dana:</label>
+  <input type="text" id="danaNumber" name="danaNumber" required><br>
+  <label for="danaName">Nama Dana:</label>
+  <input type="text" id="danaName" name="danaName" required><br>
+  <p>Total yang akan Anda terima: <span id="totalRupiah">0</span> rupiah</p>
+  <button onclick="makePayment()">Lanjutkan Pembayaran</button>
+</div>
+
+<script>
+  let score = 0;
+  let currentQuestion = 0;
+  const questions = [
+    {
+      question: "Siapakah presiden pertama Indonesia?",
+      options: {
+        A: "Soekarno",
+        B: "Soeharto",
+        C: "Megawati",
+        D: "Jokowi"
+      },
+      answer: "A"
+    },
+    {
+      question: "Berapakah jumlah provinsi di Indonesia?",
+      options: {
+        A: "32",
+        B: "33",
+        C: "34",
+        D: "35"
+      },
+      answer: "B"
+    },
+    {
+      question: "Siapa pencipta lagu 'Indonesia Raya'?",
+      options: {
+        A: "Wage Rudolf Soepratman",
+        B: "Ismail Marzuki",
+        C: "Raden Mas Noto Soeroto",
+        D: "Pramudina Afra Krisna"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa nama puncak tertinggi di Indonesia?",
+      options: {
+        A: "Puncak Jaya",
+        B: "Puncak Mandala",
+        C: "Puncak Trikora",
+        D: "Puncak Carstensz"
+      },
+      answer: "A"
+    },
+    {
+      question: "Siapakah pelopor kemerdekaan Indonesia di tahun 1908?",
+      options: {
+        A: "Douwes Dekker",
+        B: "Soekarno",
+        C: "Mohammad Hatta",
+        D: "Sutan Sjahrir"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa nama samudera yang terletak di sebelah barat Indonesia?",
+      options: {
+        A: "Samudera Hindia",
+        B: "Samudera Atlantik",
+        C: "Samudera Pasifik",
+        D: "Samudera Arktik"
+      },
+      answer: "A"
+    },
+    {
+      question: "Siapakah tokoh pendiri Gerakan Non-Blok?",
+      options: {
+        A: "Soekarno",
+        B: "Josip Broz Tito",
+        C: "Jawaharlal Nehru",
+        D: "Gamal Abdel Nasser"
+      },
+      answer: "A"
+    },
+    {
+      question: "Berapa banyak gunung berapi yang dimiliki Indonesia?",
+      options: {
+        A: "125",
+        B: "130",
+        C: "135",
+        D: "140"
+      },
+      answer: "B"
+    },
+    {
+      question: "Apa bunga nasional Indonesia?",
+      options: {
+        A: "Melati",
+        B: "Anggrek Bulan",
+        C: "Padma",
+        D: "Kenanga"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa ibukota Indonesia?",
+      options: {
+        A: "Jakarta",
+        B: "Surabaya",
+        C: "Bandung",
+        D: "Medan"
+      },
+      answer: "A"
+    },
+    // Penambahan 20 soal bahasa Indonesia
+    {
+      question: "Apa nama julukan Indonesia?",
+      options: {
+        A: "Negara Seribu Pulau",
+        B: "Bumi Pertiwi",
+        C: "Negeri Tanah Air",
+        D: "Negeri Gajah Putih"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa nama lagu kebangsaan Indonesia?",
+      options: {
+        A: "Indonesia Raya",
+        B: "Maju Tak Gentar",
+        C: "Garuda Pancasila",
+        D: "Bangun Pemudi Pemuda"
+      },
+      answer: "A"
+    },
+    {
+      question: "Siapakah penulis buku 'Bumi Manusia'?",
+      options: {
+        A: "Pramoedya Ananta Toer",
+        B: "Andrea Hirata",
+        C: "Tere Liye",
+        D: "Dee Lestari"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa nama fauna khas Indonesia yang memiliki nama ilmiah 'Pongo pygmaeus'?",
+      options: {
+        A: "Orang Utan",
+        B: "Harimau Sumatera",
+        C: "Badak Jawa",
+        D: "Komodo"
+      },
+      answer: "A"
+    },
+    {
+      question: "Siapakah pahlawan nasional yang dijuluki 'Pahlawan Revolusi'?",
+      options: {
+        A: "Sukarno",
+        B: "Hatta",
+        C: "Soedirman",
+        D: "Kartini"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa nama pahlawan nasional yang juga dikenal sebagai 'Bapak Proklamasi'?",
+      options: {
+        A: "Soekarno",
+        B: "Mohammad Hatta",
+        C: "I Gusti Ngurah Rai",
+        D: "Sutan Sjahrir"
+      },
+      answer: "A"
+    },
+    {
+      question: "Berapa lama masa jabatan presiden di Indonesia?",
+      options: {
+        A: "5 tahun",
+        B: "4 tahun",
+        C: "6 tahun",
+        D: "3 tahun"
+      },
+      answer: "A"
+    },
+    {
+      question: "Siapakah penulis novel 'Laskar Pelangi'?",
+      options: {
+        A: "Andrea Hirata",
+        B: "Pramoedya Ananta Toer",
+        C: "Dee Lestari",
+        D: "Tere Liye"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa nama penulis buku '5 cm'?",
+      options: {
+        A: "Donny Dhirgantoro",
+        B: "Pramoedya Ananta Toer",
+        C: "Andrea Hirata",
+        D: "Tere Liye"
+      },
+      answer: "A"
+    },
+    {
+      question: "Siapakah presiden pertama Indonesia?",
+      options: {
+        A: "Soekarno",
+        B: "Soeharto",
+        C: "Megawati",
+        D: "Jokowi"
+      },
+      answer: "A"
+    },
+    {
+      question: "Berapakah jumlah provinsi di Indonesia?",
+      options: {
+        A: "32",
+        B: "33",
+        C: "34",
+        D: "35"
+      },
+      answer: "B"
+    },
+    {
+      question: "Siapa pencipta lagu 'Indonesia Raya'?",
+      options: {
+        A: "Wage Rudolf Soepratman",
+        B: "Ismail Marzuki",
+        C: "Raden Mas Noto Soeroto",
+        D: "Pramudina Afra Krisna"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa nama puncak tertinggi di Indonesia?",
+      options: {
+        A: "Puncak Jaya",
+        B: "Puncak Mandala",
+        C: "Puncak Trikora",
+        D: "Puncak Carstensz"
+      },
+      answer: "A"
+    },
+    {
+      question: "Siapakah pelopor kemerdekaan Indonesia di tahun 1908?",
+      options: {
+        A: "Douwes Dekker",
+        B: "Soekarno",
+        C: "Mohammad Hatta",
+        D: "Sutan Sjahrir"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa nama samudera yang terletak di sebelah barat Indonesia?",
+      options: {
+        A: "Samudera Hindia",
+        B: "Samudera Atlantik",
+        C: "Samudera Pasifik",
+        D: "Samudera Arktik"
+      },
+      answer: "A"
+    },
+    {
+      question: "Siapakah tokoh pendiri Gerakan Non-Blok?",
+      options: {
+        A: "Soekarno",
+        B: "Josip Broz Tito",
+        C: "Jawaharlal Nehru",
+        D: "Gamal Abdel Nasser"
+      },
+      answer: "A"
+    },
+    {
+      question: "Berapa banyak gunung berapi yang dimiliki Indonesia?",
+      options: {
+        A: "125",
+        B: "130",
+        C: "135",
+        D: "140"
+      },
+      answer: "B"
+    },
+    {
+      question: "Apa bunga nasional Indonesia?",
+      options: {
+        A: "Melati",
+        B: "Anggrek Bulan",
+        C: "Padma",
+        D: "Kenanga"
+      },
+      answer: "A"
+    },
+    {
+      question: "Apa ibukota Indonesia?",
+      options: {
+        A: "Jakarta",
+        B: "Surabaya",
+        C: "Bandung",
+        D: "Medan"
+      },
+      answer: "A"
+    }
+  ];
+
+  function login(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    // Lakukan autentikasi di sini
+    if (username === 'khairulyadi' && password === 'khairul123') {
+      showPage('game');
+      displayQuestion();
+    } else {
+      alert('Username atau password salah. Silakan coba lagi.');
+    }
+  }
+
+  function displayQuestion() {
+    if (currentQuestion < questions.length) {
+      const questionElement = document.getElementById('question');
+      const optionsElement = document.getElementById('options');
+      questionElement.textContent = questions[currentQuestion].question;
+      optionsElement.innerHTML = '';
+      const options = questions[currentQuestion].options;
+      for (const key in options) {
+        const button = document.createElement('button');
+        button.textContent = key + '. ' + options[key];
+        button.onclick = function() {
+          checkAnswer(key);
+        };
+        optionsElement.appendChild(button);
+      }
+    } else {
+      endGame();
+    }
+  }
+
+  function checkAnswer(selectedAnswer) {
+    if (selectedAnswer === questions[currentQuestion].answer) {
+      document.getElementById('result').textContent = "Benar!";
+      score += 10000;
+    } else {
+      document.getElementById('result').textContent = "Salah!";
+    }
+
+    document.getElementById('score').textContent = score;
+    currentQuestion++;
+    displayQuestion();
+  }
+
+  function endGame() {
+    showPage('payment');
+    const totalRupiah = score; // 1 skor = 10000 rupiah
+    document.getElementById('totalRupiah').textContent = totalRupiah;
+  }
+
+  function makePayment() {
+    const danaNumber = document.getElementById('danaNumber').value;
+    const danaName = document.getElementById('danaName').value;
+    const totalRupiah = document.getElementById('totalRupiah').textContent;
+    
+    alert(`Pembayaran sukses!\nNomor Dana: ${danaNumber}\nNama Dana: ${danaName}\nTotal: ${totalRupiah} rupiah`);
+    window.close(); // Menutup halaman
+  }
+
+  function showPage(pageId) {
+    const pages = document.querySelectorAll('.page');
+    pages.forEach(page => {
+      if (page.id === pageId) {
+        page.style.display = 'block';
+      } else {
+        page.style.display = 'none';
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
